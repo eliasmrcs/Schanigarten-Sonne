@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase'
-import { openrouter, STORY_MODEL } from '@/lib/ai/client'
+import { getOpenRouter, STORY_MODEL } from '@/lib/ai/client'
 import { buildSystemPrompt, buildScenePrompt } from '@/lib/ai/prompts'
 import type { Scene, Character, StoryMoment, StatDelta } from '@/types'
 
@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
       lastChoice: chosenAction,
     })
 
-    const completion = await openrouter.chat.completions.create({
+    const completion = await getOpenRouter().chat.completions.create({
       model: STORY_MODEL,
       messages: [
         { role: 'system', content: systemPrompt },

@@ -24,4 +24,9 @@ function validateEnv() {
   return result.data
 }
 
-export const env = validateEnv()
+// Lazy — only validate at runtime (inside request handlers), not at build time
+let _env: ReturnType<typeof validateEnv> | null = null
+export function getEnv() {
+  if (!_env) _env = validateEnv()
+  return _env
+}
