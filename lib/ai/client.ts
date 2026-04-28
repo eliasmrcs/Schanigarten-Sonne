@@ -10,7 +10,7 @@ export function getOpenRouter(): OpenAI {
       apiKey: process.env.OPENROUTER_API_KEY,
       defaultHeaders: {
         'HTTP-Referer': 'https://homie.app',
-        'X-Title': 'Homie — AI Tamagotchi',
+        'X-Title': 'Homie - AI Tamagotchi',
       },
     })
   }
