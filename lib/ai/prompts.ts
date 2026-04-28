@@ -71,7 +71,7 @@ export function buildScenePrompt(params: {
         .slice(-5)
         .map((m) => `- ${m.scene_text}${m.chosen_action ? ` [User chose: ${m.chosen_action}]` : ''}`)
         .join('\n')
-    : 'This is the very first scene. ${character.name} is just arriving.'
+    : `This is the very first scene. ${character.name} is just arriving.`
 
   return `CURRENT STATE:
 Mood: ${character.mood}/100 | Energy: ${character.energy}/100 | Hunger: ${character.hunger}/100 | Happiness: ${character.happiness}/100

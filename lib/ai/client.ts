@@ -17,9 +17,6 @@ export function getOpenRouter(): OpenAI {
   return _openrouter
 }
 
-// Keep named export for compatibility
-export const openrouter = { chat: { completions: { create: (...args: Parameters<OpenAI['chat']['completions']['create']>) => getOpenRouter().chat.completions.create(...args) } } }
-
 // Model: Mistral Small Creative — purpose-built for narrative/roleplay at $0.10/$0.30 per 1M tokens
 // Fallback free option during MVP dev: 'meta-llama/llama-3.3-70b-instruct:free'
 export const STORY_MODEL = 'mistralai/mistral-small-3.2-24b-instruct'
