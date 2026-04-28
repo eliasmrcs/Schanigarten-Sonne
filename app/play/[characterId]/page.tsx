@@ -2,6 +2,7 @@
 
 import { useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
+import { getBrowserClient } from '@/lib/supabase'
 import { useGameStore } from '@/lib/store/gameStore'
 import GameCanvas from '@/components/game/GameCanvas'
 import StoryPanel from '@/components/ui/StoryPanel'
@@ -34,9 +35,13 @@ export default function PlayPage() {
       setError(null)
 
       try {
+        const { data: { session } } = await getBrowserClient().auth.getSession()
         const res = await fetch('/api/story', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {}),
+          },
           body: JSON.stringify({ characterId, chosenAction, statDelta }),
         })
 

@@ -15,9 +15,19 @@ export async function POST(req: NextRequest) {
     }
 
     const supabase = await createServerClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    if (authError || !user) {
+    // Accept Bearer token from header (anonymous sessions don't always propagate via cookies)
+    const authHeader = req.headers.get('Authorization')
+    let user = null
+    if (authHeader?.startsWith('Bearer ')) {
+      const { data } = await supabase.auth.getUser(authHeader.slice(7))
+      user = data.user
+    } else {
+      const { data } = await supabase.auth.getUser()
+      user = data.user
+    }
+
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

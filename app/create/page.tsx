@@ -58,9 +58,15 @@ export default function CreatePage() {
     setError(null)
 
     try {
+      const supabase = getBrowserClient()
+      const { data: { session } } = await supabase.auth.getSession()
+
       const res = await fetch('/api/character', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {}),
+        },
         body: JSON.stringify({ name: name.trim(), personalityTrait: trait }),
       })
 
