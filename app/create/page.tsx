@@ -36,7 +36,11 @@ export default function CreatePage() {
     async function ensureAuth() {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) {
-        await supabase.auth.signInAnonymously()
+        const { error } = await supabase.auth.signInAnonymously()
+        if (error) {
+          setError('Failed to connect: ' + error.message)
+          return
+        }
       }
       setIsAuthReady(true)
     }
@@ -59,13 +63,21 @@ export default function CreatePage() {
 
     try {
       const supabase = getBrowserClient()
-      const { data: { session } } = await supabase.auth.getSession()
+      let { data: { session } } = await supabase.auth.getSession()
+
+      if (!session) {
+        const { data, error: signInError } = await supabase.auth.signInAnonymously()
+        if (signInError) throw new Error('Auth failed: ' + signInError.message)
+        session = data.session
+      }
+
+      if (!session?.access_token) throw new Error('No auth session — try refreshing the page')
 
       const res = await fetch('/api/character', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {}),
+          'Authorization': `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({ name: name.trim(), personalityTrait: trait }),
       })
