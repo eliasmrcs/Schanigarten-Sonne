@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase-server'
 import { getOpenRouter, STORY_MODEL } from '@/lib/ai/client'
 import { buildSystemPrompt, buildScenePrompt } from '@/lib/ai/prompts'
 import type { Scene, Character, StoryMoment, StatDelta } from '@/types'
