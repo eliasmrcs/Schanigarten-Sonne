@@ -1,28 +1,46 @@
-import { createClient } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/ssr'
+import { createServerClient as createSSRServerClient, type CookieOptions } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 
-// Lazy singleton — not instantiated at module level so Next.js build doesn't crash
-// when env vars are injected at runtime rather than build time
-let _supabase: ReturnType<typeof createClient> | null = null
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-export function getSupabase() {
-  if (!_supabase) {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    _supabase = createClient(url, key)
+// Browser client — lazy singleton, safe to call from client components
+let _browserClient: ReturnType<typeof createBrowserClient> | null = null
+
+export function getBrowserClient() {
+  if (!_browserClient) {
+    _browserClient = createBrowserClient(supabaseUrl, supabaseAnonKey)
   }
-  return _supabase
+  return _browserClient
 }
 
-// Keep named export for backwards compat with any client-side usage
+// Legacy compat export used in client components
 export const supabase = {
-  get auth() { return getSupabase().auth },
-  from: (...args: Parameters<ReturnType<typeof createClient>['from']>) => getSupabase().from(...args),
+  get auth() { return getBrowserClient().auth },
+  from: (...args: Parameters<ReturnType<typeof createBrowserClient>['from']>) =>
+    getBrowserClient().from(...args),
 }
 
-export function createServerClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { auth: { persistSession: false } }
-  )
+// Server client — reads/writes session from Next.js cookies()
+// Use this in API routes and Server Components
+export async function createServerClient() {
+  const cookieStore = await cookies()
+
+  return createSSRServerClient(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll()
+      },
+      setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options)
+          )
+        } catch {
+          // Called from a Server Component — cookies can't be set, middleware handles it
+        }
+      },
+    },
+  })
 }
