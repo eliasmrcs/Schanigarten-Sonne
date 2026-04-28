@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { renderSpriteToCanvas } from '@/lib/pixel/generator'
+import { getBrowserClient } from '@/lib/supabase'
 import { PERSONALITY_DESCRIPTIONS } from '@/types'
 import type { PersonalityTrait } from '@/types'
 
@@ -27,6 +28,20 @@ export default function CreatePage() {
   const [trait, setTrait] = useState<PersonalityTrait>('curious')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isAuthReady, setIsAuthReady] = useState(false)
+
+  // Wait for anonymous session before allowing character creation
+  useEffect(() => {
+    const supabase = getBrowserClient()
+    async function ensureAuth() {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        await supabase.auth.signInAnonymously()
+      }
+      setIsAuthReady(true)
+    }
+    ensureAuth()
+  }, [])
 
   // Live sprite preview
   useEffect(() => {
@@ -132,10 +147,10 @@ export default function CreatePage() {
 
           <button
             type="submit"
-            disabled={!name.trim() || isSubmitting}
+            disabled={!name.trim() || isSubmitting || !isAuthReady}
             className="w-full py-4 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-700 disabled:text-white/30 rounded-xl font-mono font-bold text-lg transition-colors"
           >
-            {isSubmitting ? 'hatching...' : 'hatch →'}
+            {!isAuthReady ? 'connecting...' : isSubmitting ? 'hatching...' : 'hatch →'}
           </button>
         </form>
       </div>
